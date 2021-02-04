@@ -102,7 +102,7 @@ public class FilteringWebHandler implements WebHandler {
 			logger.debug("Sorted gatewayFilterFactories: " + combined);
 		}
 
-		// 创建 DefaultGatewayFilterChain
+		// 创建 DefaultGatewayFilterChain执行过滤器
 		return new DefaultGatewayFilterChain(combined).filter(exchange);
 	}
 
