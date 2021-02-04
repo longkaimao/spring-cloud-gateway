@@ -41,6 +41,8 @@ import org.springframework.expression.spel.support.SimpleEvaluationContext;
 import org.springframework.util.StringUtils;
 
 /**
+ *
+ * 通过调用 DiscoveryClient 获取注册在注册中心的服务列表，生成对应的 RouteDefinition 数组。
  * TODO: change to RouteLocator? use java dsl
  *
  * @author Spencer Gibb
@@ -57,6 +59,11 @@ public class DiscoveryClientRouteDefinitionLocator implements RouteDefinitionLoc
 
 	private Flux<List<ServiceInstance>> serviceInstances;
 
+	/**
+	 * 通过discoveryClient从配置中心拿取数据
+	 * @param discoveryClient
+	 * @param properties
+	 */
 	public DiscoveryClientRouteDefinitionLocator(ReactiveDiscoveryClient discoveryClient,
 			DiscoveryLocatorProperties properties) {
 		this(discoveryClient.getClass().getSimpleName(), properties);
@@ -75,6 +82,10 @@ public class DiscoveryClientRouteDefinitionLocator implements RouteDefinitionLoc
 		evalCtxt = SimpleEvaluationContext.forReadOnlyDataBinding().withInstanceMethods().build();
 	}
 
+	/**
+	 * 获取路由信息
+	 * @return
+	 */
 	@Override
 	public Flux<RouteDefinition> getRouteDefinitions() {
 
@@ -102,6 +113,9 @@ public class DiscoveryClientRouteDefinitionLocator implements RouteDefinitionLoc
 
 					final ServiceInstance instanceForEval = new DelegatingServiceInstance(instance, properties);
 
+					/**
+					 * 设置断言
+					 */
 					for (PredicateDefinition original : this.properties.getPredicates()) {
 						PredicateDefinition predicate = new PredicateDefinition();
 						predicate.setName(original.getName());
@@ -112,6 +126,9 @@ public class DiscoveryClientRouteDefinitionLocator implements RouteDefinitionLoc
 						routeDefinition.getPredicates().add(predicate);
 					}
 
+					/**
+					 * 设置过滤器
+					 */
 					for (FilterDefinition original : this.properties.getFilters()) {
 						FilterDefinition filter = new FilterDefinition();
 						filter.setName(original.getName());
@@ -129,7 +146,9 @@ public class DiscoveryClientRouteDefinitionLocator implements RouteDefinitionLoc
 	protected RouteDefinition buildRouteDefinition(Expression urlExpr, ServiceInstance serviceInstance) {
 		String serviceId = serviceInstance.getServiceId();
 		RouteDefinition routeDefinition = new RouteDefinition();
+		// 设置 ID
 		routeDefinition.setId(this.routeIdPrefix + serviceId);
+		// 设置 路由URL
 		String uri = urlExpr.getValue(this.evalCtxt, serviceInstance, String.class);
 		routeDefinition.setUri(URI.create(uri));
 		// add instance metadata

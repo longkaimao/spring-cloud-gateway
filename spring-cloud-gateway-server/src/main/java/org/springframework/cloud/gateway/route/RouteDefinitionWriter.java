@@ -19,12 +19,24 @@ package org.springframework.cloud.gateway.route;
 import reactor.core.publisher.Mono;
 
 /**
+ * 路由配置写入接口。该接口定义了保存与删除两个方法
+ * 我们以前在做动态路由功能时，就是用的这个类来动态写入和删除的
  * @author Spencer Gibb
  */
 public interface RouteDefinitionWriter {
 
+	/**
+	 * 保存路由配置
+	 * @param route 路由
+	 * @return
+	 */
 	Mono<Void> save(Mono<RouteDefinition> route);
 
+	/**
+	 * 删除路由配置
+	 * @param routeId 路由ID
+	 * @return
+	 */
 	Mono<Void> delete(Mono<String> routeId);
 
 }

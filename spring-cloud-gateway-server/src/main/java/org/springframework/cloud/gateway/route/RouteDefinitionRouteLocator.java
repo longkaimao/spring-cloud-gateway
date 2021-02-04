@@ -43,6 +43,8 @@ import org.springframework.core.annotation.AnnotationAwareOrderComparator;
 import org.springframework.web.server.ServerWebExchange;
 
 /**
+ * 路由定位器：负责路由查找、转换
+ * 从 RouteDefinitionLocator 获取 RouteDefinition ，转换成 Route
  * {@link RouteLocator} that loads routes from a {@link RouteDefinitionLocator}.
  *
  * @author Spencer Gibb
@@ -90,6 +92,10 @@ public class RouteDefinitionRouteLocator implements RouteLocator {
 		});
 	}
 
+	/**
+	 * 获取所有的路由
+	 * @return
+	 */
 	@Override
 	public Flux<Route> getRoutes() {
 		Flux<Route> routes = this.routeDefinitionLocator.getRouteDefinitions().map(this::convertToRoute);
@@ -112,6 +118,11 @@ public class RouteDefinitionRouteLocator implements RouteLocator {
 		});
 	}
 
+	/**
+	 * 路由RouteDefinition转换为Route对象
+	 * @param routeDefinition
+	 * @return
+	 */
 	private Route convertToRoute(RouteDefinition routeDefinition) {
 		AsyncPredicate<ServerWebExchange> predicate = combinePredicates(routeDefinition);
 		List<GatewayFilter> gatewayFilters = getFilters(routeDefinition);
@@ -119,6 +130,12 @@ public class RouteDefinitionRouteLocator implements RouteLocator {
 		return Route.async(routeDefinition).asyncPredicate(predicate).replaceFilters(gatewayFilters).build();
 	}
 
+	/**
+	 * 加载Gateway过滤器
+	 * @param id
+	 * @param filterDefinitions
+	 * @return
+	 */
 	@SuppressWarnings("unchecked")
 	List<GatewayFilter> loadGatewayFilters(String id, List<FilterDefinition> filterDefinitions) {
 		ArrayList<GatewayFilter> ordered = new ArrayList<>(filterDefinitions.size());

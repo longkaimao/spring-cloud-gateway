@@ -51,6 +51,7 @@ import static org.springframework.cloud.gateway.support.ServerWebExchangeUtils.G
 import static org.springframework.cloud.gateway.support.ServerWebExchangeUtils.addOriginalRequestUrl;
 
 /**
+ * 根据 lb:// 前缀过滤处理，使用 serviceId 选择一个服务实例，从而实现负载均衡。
  * A {@link GlobalFilter} implementation that routes requests using reactive Spring Cloud
  * LoadBalancer.
  *
@@ -90,6 +91,7 @@ public class ReactiveLoadBalancerClientFilter implements GlobalFilter, Ordered {
 	public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
 		URI url = exchange.getAttribute(GATEWAY_REQUEST_URL_ATTR);
 		String schemePrefix = exchange.getAttribute(GATEWAY_SCHEME_PREFIX_ATTR);
+		//只处理lb，即从服务注册中心的服务请求
 		if (url == null || (!"lb".equals(url.getScheme()) && !"lb".equals(schemePrefix))) {
 			return chain.filter(exchange);
 		}
@@ -153,8 +155,16 @@ public class ReactiveLoadBalancerClientFilter implements GlobalFilter, Ordered {
 		return LoadBalancerUriTools.reconstructURI(serviceInstance, original);
 	}
 
+	/**
+	 * 根据服务ID，选择一个服务实例
+	 * @param lbRequest
+	 * @param serviceId
+	 * @param supportedLifecycleProcessors
+	 * @return
+	 */
 	private Mono<Response<ServiceInstance>> choose(Request<RequestDataContext> lbRequest, String serviceId,
 			Set<LoadBalancerLifecycle> supportedLifecycleProcessors) {
+		//获取一个服务
 		ReactorLoadBalancer<ServiceInstance> loadBalancer = this.clientFactory.getInstance(serviceId,
 				ReactorServiceInstanceLoadBalancer.class);
 		if (loadBalancer == null) {

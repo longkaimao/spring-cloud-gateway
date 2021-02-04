@@ -17,6 +17,8 @@
 package org.springframework.cloud.gateway.route;
 
 /**
+ * 存储器 RouteDefinitionLocator 接口，用于存储路由信息，默认存储在内存中
+ * 通过实现该接口，实现从存储器( 例如，内存 / Redis / MySQL 等 )读取、保存、删除路由配置。
  * @author Spencer Gibb
  */
 public interface RouteDefinitionRepository extends RouteDefinitionLocator, RouteDefinitionWriter {

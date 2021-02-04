@@ -38,6 +38,8 @@ import org.springframework.web.server.ServerWebExchange;
 import static org.springframework.cloud.gateway.support.ServerWebExchangeUtils.CLIENT_RESPONSE_CONN_ATTR;
 
 /**
+ * NettyWriteResponseFilter回写响应网关过滤器
+ * NettyWriteResponseFilter 与NettyRoutingFilter成对出现，后者负责请求下游业务服务，前者负责将代理响应写回网关客户端响应
  * @author Spencer Gibb
  */
 public class NettyWriteResponseFilter implements GlobalFilter, Ordered {
@@ -67,7 +69,9 @@ public class NettyWriteResponseFilter implements GlobalFilter, Ordered {
 		// @formatter:off
 		return chain.filter(exchange)
 				.doOnError(throwable -> cleanup(exchange))
+				//调用 #then(Mono) 方法，实现 After Filter 逻辑。
 				.then(Mono.defer(() -> {
+					// 获得 Response，就是NettyRoutingFilter中请求下游服务获取到的响应
 					Connection connection = exchange.getAttribute(CLIENT_RESPONSE_CONN_ATTR);
 
 					if (connection == null) {
@@ -96,6 +100,7 @@ public class NettyWriteResponseFilter implements GlobalFilter, Ordered {
 							log.trace("invalid media type", e);
 						}
 					}
+					// 将 Netty Response 写回给客户端。
 					return (isStreamingMediaType(contentType)
 							? response.writeAndFlushWith(body.map(Flux::just))
 							: response.writeWith(body));

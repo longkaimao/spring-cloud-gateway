@@ -40,6 +40,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 
 /**
+ * 提供管理网关的 HTTP API
  * @author Spencer Gibb
  */
 @RestControllerEndpoint(id = "gateway")

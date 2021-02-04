@@ -19,6 +19,8 @@ package org.springframework.cloud.gateway.route;
 import reactor.core.publisher.Flux;
 
 /**
+ *
+ * 路由定位器接口，Route 的定位器或者说探测器，是用来获取 Route 信息的。定义获得路由数据的方法，最主要实现类：RouteDefinitionRouteLocator
  * @author Spencer Gibb
  */
 // TODO: rename to Routes?

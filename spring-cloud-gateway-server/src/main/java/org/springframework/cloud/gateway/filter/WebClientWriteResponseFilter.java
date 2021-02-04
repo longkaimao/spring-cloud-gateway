@@ -29,6 +29,9 @@ import org.springframework.web.server.ServerWebExchange;
 import static org.springframework.cloud.gateway.support.ServerWebExchangeUtils.CLIENT_RESPONSE_ATTR;
 
 /**
+ * Http 回写响应网关过滤器。
+ * TODO 我们知道 NettyRoutingFilter / NettyWriteResponseFilter 和 WebClientHttpRoutingFilter / WebClientHttpRoutingFilter 实现一样的功能。
+ * 但为什么要再实现一次呢？
  * @author Spencer Gibb
  */
 public class WebClientWriteResponseFilter implements GlobalFilter, Ordered {
@@ -49,7 +52,8 @@ public class WebClientWriteResponseFilter implements GlobalFilter, Ordered {
 	public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
 		// NOTICE: nothing in "pre" filter stage as CLIENT_RESPONSE_ATTR is not added
 		// until the WebHandler is run
-		return chain.filter(exchange).doOnError(throwable -> cleanup(exchange)).then(Mono.defer(() -> {
+		return chain.filter(exchange).doOnError(throwable -> cleanup(exchange))
+				.then(Mono.defer(() -> {//调用 #then(Mono) 方法，实现 After Filter 逻辑。
 			ClientResponse clientResponse = exchange.getAttribute(CLIENT_RESPONSE_ATTR);
 			if (clientResponse == null) {
 				return Mono.empty();

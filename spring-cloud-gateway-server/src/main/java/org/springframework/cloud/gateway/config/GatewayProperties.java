@@ -48,6 +48,37 @@ public class GatewayProperties {
 	private final Log logger = LogFactory.getLog(getClass());
 
 	/**
+	 * 在配置文件中配置的routes
+	 *  spring:
+	 *       cloud:
+	 *         gateway:
+	 *           routes:
+	 *           # =====================================
+	 *           - host_example_to_httpbin=${test.uri}, Host=**.example.org
+	 *
+	 *           # =====================================
+	 *           - id: host_foo_path_headers_to_httpbin
+	 *             uri: ${test.uri}
+	 *             predicates:
+	 *             - Host=**.foo.org
+	 *             - Path=/headers
+	 *             - Method=GET
+	 *             - Header=X-Request-Id, \d+
+	 *             - Query=foo, ba.
+	 *             - Query=baz
+	 *             - Cookie=chocolate, ch.p
+	 *             - After=1900-01-20T17:42:47.789-07:00[America/Denver]
+	 *             filters:
+	 *             - AddResponseHeader=X-Response-Foo, Bar
+	 *
+	 *           # =====================================
+	 *           - id: add_request_header_test
+	 *             uri: ${test.uri}
+	 *             predicates:
+	 *             - Host=**.addrequestheader.org
+	 *             - Path=/headers
+	 *             filters:
+	 *             - AddRequestHeader=X-Request-Foo, Bar
 	 * List of Routes.
 	 */
 	@NotNull
@@ -55,6 +86,13 @@ public class GatewayProperties {
 	private List<RouteDefinition> routes = new ArrayList<>();
 
 	/**
+	 * 默认过滤器配置
+	 * spring:
+	 *       cloud:
+	 *         gateway:
+	 *           default-filters:
+	 *           - AddResponseHeader=X-Response-Default-Foo, Default-Bar
+	 *           - PrefixPath=/httpbin
 	 * List of filter definitions that are applied to every route.
 	 */
 	private List<FilterDefinition> defaultFilters = new ArrayList<>();

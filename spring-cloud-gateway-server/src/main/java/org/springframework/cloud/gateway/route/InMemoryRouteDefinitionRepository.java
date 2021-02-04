@@ -28,6 +28,7 @@ import org.springframework.util.StringUtils;
 import static java.util.Collections.synchronizedMap;
 
 /**
+ * 路由信息存储在内存中
  * @author Spencer Gibb
  */
 public class InMemoryRouteDefinitionRepository implements RouteDefinitionRepository {

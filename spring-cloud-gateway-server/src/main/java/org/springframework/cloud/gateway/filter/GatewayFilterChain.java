@@ -22,6 +22,7 @@ import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.WebFilter;
 
 /**
+ * 网关过滤器链接口，其默认实现类为DefaultGatewayFilterChain
  * Contract to allow a {@link WebFilter} to delegate to the next in the chain.
  *
  * @author Rossen Stoyanchev

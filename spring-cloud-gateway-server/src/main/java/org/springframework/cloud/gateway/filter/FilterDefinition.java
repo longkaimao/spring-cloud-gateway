@@ -28,6 +28,7 @@ import org.springframework.validation.annotation.Validated;
 import static org.springframework.util.StringUtils.tokenizeToStringArray;
 
 /**
+ * 统一过滤器实体对象
  * @author Spencer Gibb
  */
 @Validated

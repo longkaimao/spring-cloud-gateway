@@ -21,6 +21,8 @@ import reactor.core.publisher.Mono;
 import org.springframework.web.server.ServerWebExchange;
 
 /**
+ * 全局过滤器接口
+ * 与GatewayFilter不同的是，GlobalFilter 会作用到所有的 Route 上。
  * Contract for interception-style, chained processing of Web requests that may be used to
  * implement cross-cutting, application-agnostic requirements such as security, timeouts,
  * and others.

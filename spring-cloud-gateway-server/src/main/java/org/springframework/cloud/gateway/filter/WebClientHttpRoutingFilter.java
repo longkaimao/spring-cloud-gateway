@@ -42,10 +42,23 @@ import static org.springframework.cloud.gateway.support.ServerWebExchangeUtils.i
 import static org.springframework.cloud.gateway.support.ServerWebExchangeUtils.setAlreadyRouted;
 
 /**
+ * Http 路由网关过滤器。其根据 http:// 或 https:// 前缀( Scheme )过滤处理，
+ * 使用基于 org.springframework.cloud.gateway.filter.WebClient 实现的 HttpClient 请求后端 Http 服务。
+ *
+ * WebClientWriteResponseFilter ，与 WebClientHttpRoutingFilter 成对使用的网关过滤器。
+ * 其将 WebClientWriteResponseFilter 请求后端 Http 服务的响应写回客户端。
+ *
+ * 怎么配置使用此过滤器
+ * 第一步，在 NettyConfiguration 注释掉 #routingFilter(...) 和 #nettyWriteResponseFilter() 两个 Bean 方法。
+ * 第二步，在 GatewayAutoConfiguration 打开 #webClientHttpRoutingFilter() 和 #webClientWriteResponseFilter() 两个 Bean 方法。
  * @author Spencer Gibb
  */
 public class WebClientHttpRoutingFilter implements GlobalFilter, Ordered {
 
+	/**
+	 * webClient 属性，默认情况下，使用 org.springframework.web.reactive.function.client.DefaultWebClient 实现类。
+	 * 通过该属性，请求后端的 Http 服务。
+	 */
 	private final WebClient webClient;
 
 	private final ObjectProvider<List<HttpHeadersFilter>> headersFiltersProvider;
@@ -105,6 +118,7 @@ public class WebClientHttpRoutingFilter implements GlobalFilter, Ordered {
 			headersSpec = bodySpec;
 		}
 
+		//发起向后端服务的请求。
 		return headersSpec.exchange()
 				// .log("webClient route")
 				.flatMap(res -> {
@@ -114,6 +128,7 @@ public class WebClientHttpRoutingFilter implements GlobalFilter, Ordered {
 					// Defer committing the response until all route filters have run
 					// Put client response as ServerWebExchange attribute and write
 					// response later NettyWriteResponseFilter
+					// 设置 Response 到 CLIENT_RESPONSE_ATTR,后续 WebClientWriteResponseFilter 将响应写回给客户端。
 					exchange.getAttributes().put(CLIENT_RESPONSE_ATTR, res);
 					return chain.filter(exchange);
 				});

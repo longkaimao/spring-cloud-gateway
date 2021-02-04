@@ -36,12 +36,22 @@ import static org.springframework.cloud.gateway.support.ServerWebExchangeUtils.G
 import static org.springframework.cloud.gateway.support.ServerWebExchangeUtils.GATEWAY_ROUTE_ATTR;
 
 /**
+ * 实现AbstractHandlerMapping类，定义网关模块路由断言映射器：查找请求匹配的路由，并最终给DispatcherHandler返回请求处理器
+ * DispatcherHandler ，请求分发处理器，Spring WebFlux 的访问入口
+ * SCG处理请求的流程
+ * 1、org.springframework.web.reactive.DispatcherHandler ：接收到请求，匹配 HandlerMapping ，此处会匹配到 RoutePredicateHandlerMapping 。
+ * 2、org.springframework.cloud.gateway.handler.RoutePredicateHandlerMapping ：接收到请求，匹配 Route 。
+ * 3、org.springframework.cloud.gateway.handler.FilteringWebHandler ：获得 Route 的 GatewayFilter 数组，创建 GatewayFilterChain 处理请求。
+ *
  * @author Spencer Gibb
  */
 public class RoutePredicateHandlerMapping extends AbstractHandlerMapping {
 
 	private final FilteringWebHandler webHandler;
 
+	/**
+	 * 这里有所有路由信息
+	 */
 	private final RouteLocator routeLocator;
 
 	private final Integer managementPort;
@@ -79,8 +89,10 @@ public class RoutePredicateHandlerMapping extends AbstractHandlerMapping {
 				&& exchange.getRequest().getURI().getPort() == this.managementPort) {
 			return Mono.empty();
 		}
+		// 设置 GATEWAY_HANDLER_MAPPER_ATTR 为 RoutePredicateHandlerMapping
 		exchange.getAttributes().put(GATEWAY_HANDLER_MAPPER_ATTR, getSimpleName());
 
+		//查找路由
 		return lookupRoute(exchange)
 				// .log("route-predicate-handler-mapping", Level.FINER) //name this
 				.flatMap((Function<Route, Mono<?>>) r -> {
@@ -88,7 +100,7 @@ public class RoutePredicateHandlerMapping extends AbstractHandlerMapping {
 					if (logger.isDebugEnabled()) {
 						logger.debug("Mapping [" + getExchangeDesc(exchange) + "] to " + r);
 					}
-
+					//把查找到的路由放到GATEWAY_ROUTE_ATTR中，后续在其他地方可以获取
 					exchange.getAttributes().put(GATEWAY_ROUTE_ATTR, r);
 					return Mono.just(webHandler);
 				}).switchIfEmpty(Mono.empty().then(Mono.fromRunnable(() -> {
@@ -118,6 +130,11 @@ public class RoutePredicateHandlerMapping extends AbstractHandlerMapping {
 		return out.toString();
 	}
 
+	/**
+	 * 查找路由
+	 * @param exchange
+	 * @return
+	 */
 	protected Mono<Route> lookupRoute(ServerWebExchange exchange) {
 		return this.routeLocator.getRoutes()
 				// individually filter routes so that filterWhen error delaying is not a
@@ -125,6 +142,7 @@ public class RoutePredicateHandlerMapping extends AbstractHandlerMapping {
 				.concatMap(route -> Mono.just(route).filterWhen(r -> {
 					// add the current route we are testing
 					exchange.getAttributes().put(GATEWAY_PREDICATE_ROUTE_ATTR, r.getId());
+					//路由断言查找匹配路由
 					return r.getPredicate().apply(exchange);
 				})
 						// instead of immediately stopping main flux due to error, log and
@@ -140,7 +158,9 @@ public class RoutePredicateHandlerMapping extends AbstractHandlerMapping {
 					if (logger.isDebugEnabled()) {
 						logger.debug("Route matched: " + route.getId());
 					}
+					//校验 Route 的有效性。目前该方法是个空方法，可以通过继承 RoutePredicateHandlerMapping 进行覆盖重写。
 					validateRoute(route, exchange);
+					//返回查找到的路由
 					return route;
 				});
 
